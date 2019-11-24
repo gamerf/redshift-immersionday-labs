@@ -5,7 +5,6 @@ In this lab you will launch a new Redshift Cluster, setup connectivity and confi
 * [Before You Begin](#before-you-begin)
 * [Configure Security](#configure-security)
 * [Launch Redshift Cluster ](#launch-redshift-cluster)
-* [Configure Client Tool](#configure-client-tool)
 * [Run Sample Query](#run-sample-query)
 * [Before You Leave](#before-you-leave)
 
@@ -16,16 +15,12 @@ In this lab you will launch a new Redshift Cluster, setup connectivity and confi
   * [Your_AWS_Password]
 * Determine the [AWS Region Name] and [AWS Region Id] which is closest to you and switch your console to that [Region](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html).  
 
-
 ## Configure Security
 ### VPC
 Identify a VPC where you will launch your Redshift cluster.  For our purposes we will reuse the **VPC** created on the Networking lab.
 
 ### Subnets
 Identify a subnet with a default route to an Internet Gateway.
-
-![](../images/Subnet1.png)
-![](../images/Subnet2.png)
 
 ### Subnet Group
 Create a Redshift **Cluster Subnet Group** containing the two subnets you created earlier.
