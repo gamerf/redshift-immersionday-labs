@@ -4,13 +4,11 @@ In this lab, you will use a set of eight tables based on the TPC Benchmark data 
 
 ## Contents
 * [Before You Begin](#before-you-begin)
-* [Cloud Formation](#cloud-formation)
 * [Create Tables](#create-tables)
 * [Loading Data](#loading-data)
 * [Table Maintenance - ANALYZE](#table-maintenance---analyze)
 * [Table Maintenance - VACUUM](#table-maintenance---vacuum)
 * [Troubleshooting Loads](#troubleshooting-loads)
-* [Before You Leave](#before-you-leave)
 
 ## Before You Begin
 This lab assumes you have launched a Redshift cluster and can gather the following information.  If you have not launched a cluster, see [LAB 1 - Creating Redshift Clusters](../lab1/README.md).
@@ -26,27 +24,9 @@ It also assumes you have access to a configured client tool. For more details on
 https://console.aws.amazon.com/redshift/home?#query:
 ```
 
-## Cloud Formation
-To *skip this lab* and complete the loading of this sample data into an **existing cluster** using cloud formation, use the following link.
-
-[![Launch](../images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?#/stacks/new?stackName=ImmersionLab2&templateURL=https://s3-us-west-2.amazonaws.com/redshift-immersionday-labs/lab2.yaml)
-
-To *skip this lab* and complete the loading of this sample data into a **new cluster** using cloud formation, use the following link.
-
-[![Launch](../images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?#/stacks/new?stackName=ImmersionLab2&templateURL=https://s3-us-west-2.amazonaws.com/redshift-immersionday-labs/lab2%2Bcluster.yaml)
-
-Note: These cloud formation templates will create a Lambda function which will trigger an asynchronous Glue Python Shell script.  The Glue script assumes that the Redshift Cluster is publically accessible with an ingress rule of 0.0.0.0/0.  To monitor the load process and diagnose any load errors, see the following Cloudwatch Logs stream:
-```
-https://console.aws.amazon.com/cloudwatch/home?#logStream:group=/aws-glue/python-jobs/output
-```
-
 ## Create Tables
 Copy the following create table statements to create tables in the database.  
 ```
-DROP TABLE IF EXISTS partsupp;
-DROP TABLE IF EXISTS lineitem;
-DROP TABLE IF EXISTS supplier;
-DROP TABLE IF EXISTS part;
 DROP TABLE IF EXISTS orders;
 DROP TABLE IF EXISTS customer;
 DROP TABLE IF EXISTS nation;
@@ -88,58 +68,6 @@ create table orders (
   O_COMMENT varchar(79))
 distkey (O_ORDERKEY)
 sortkey (O_ORDERDATE);
-
-create table part (
-  P_PARTKEY bigint NOT NULL PRIMARY KEY,
-  P_NAME varchar(55),
-  P_MFGR  varchar(25),
-  P_BRAND varchar(10),
-  P_TYPE varchar(25),
-  P_SIZE integer,
-  P_CONTAINER varchar(10),
-  P_RETAILPRICE decimal(18,4),
-  P_COMMENT varchar(23))
-diststyle all;
-
-create table supplier (
-  S_SUPPKEY bigint NOT NULL PRIMARY KEY,
-  S_NAME varchar(25),
-  S_ADDRESS varchar(40),
-  S_NATIONKEY bigint REFERENCES nation(n_nationkey),
-  S_PHONE varchar(15),
-  S_ACCTBAL decimal(18,4),
-  S_COMMENT varchar(101))
-diststyle all;                                                              
-
-create table lineitem (
-  L_ORDERKEY bigint NOT NULL REFERENCES orders(O_ORDERKEY),
-  L_PARTKEY bigint REFERENCES part(P_PARTKEY),
-  L_SUPPKEY bigint REFERENCES supplier(S_SUPPKEY),
-  L_LINENUMBER integer NOT NULL,
-  L_QUANTITY decimal(18,4),
-  L_EXTENDEDPRICE decimal(18,4),
-  L_DISCOUNT decimal(18,4),
-  L_TAX decimal(18,4),
-  L_RETURNFLAG varchar(1),
-  L_LINESTATUS varchar(1),
-  L_SHIPDATE date,
-  L_COMMITDATE date,
-  L_RECEIPTDATE date,
-  L_SHIPINSTRUCT varchar(25),
-  L_SHIPMODE varchar(10),
-  L_COMMENT varchar(44),
-PRIMARY KEY (L_ORDERKEY, L_LINENUMBER))
-distkey (L_ORDERKEY)
-sortkey (L_RECEIPTDATE);
-
-create table partsupp (
-  PS_PARTKEY bigint NOT NULL REFERENCES part(P_PARTKEY),
-  PS_SUPPKEY bigint NOT NULL REFERENCES supplier(S_SUPPKEY),
-  PS_AVAILQTY integer,
-  PS_SUPPLYCOST decimal(18,4),
-  PS_COMMENT varchar(199),
-PRIMARY KEY (PS_PARTKEY, PS_SUPPKEY))
-diststyle even;
 ```
 ## Loading Data
 A COPY command loads large amounts of data much more efficiently than using INSERT statements, and stores the data more effectively as well.  Use a single COPY command to load data for one table from multiple files.  Amazon Redshift then automatically loads the data in parallel.  For your convenience, the sample data you will use is available in a public Amazon S3 bucket. To ensure that  Redshift performs a compression analysis, set the COMPUPDATE parameter to ON in your COPY commands. To copy this data you will need to replace the [Your-AWS_Account_Id] and [Your-Redshift_Role] values in the script below.
@@ -160,32 +88,12 @@ region 'us-west-2' lzop delimiter '|' COMPUPDATE PRESET;
 copy orders from 's3://redshift-immersionday-labs/data/orders/orders.tbl.'
 iam_role 'arn:aws:iam::[Your-AWS_Account_Id]:role/[Your-Redshift-Role]'
 region 'us-west-2' lzop delimiter '|' COMPUPDATE PRESET;
-
-copy part from 's3://redshift-immersionday-labs/data/part/part.tbl.'
-iam_role 'arn:aws:iam::[Your-AWS_Account_Id]:role/[Your-Redshift-Role]'
-region 'us-west-2' lzop delimiter '|' COMPUPDATE PRESET;
-
-copy supplier from 's3://redshift-immersionday-labs/data/supplier/supplier.json' manifest
-iam_role 'arn:aws:iam::[Your-AWS_Account_Id]:role/[Your-Redshift-Role]'
-region 'us-west-2' lzop delimiter '|' COMPUPDATE PRESET;
-
-copy lineitem from 's3://redshift-immersionday-labs/data/lineitem/lineitem.tbl.'
-iam_role 'arn:aws:iam::[Your-AWS_Account_Id]:role/[Your-Redshift-Role]'
-region 'us-west-2' lzop delimiter '|' COMPUPDATE PRESET;
-
-copy partsupp from 's3://redshift-immersionday-labs/data/partsupp/partsupp.tbl.'
-iam_role 'arn:aws:iam::[Your-AWS_Account_Id]:role/[Your-Redshift-Role]'
-region 'us-west-2' lzop delimiter '|' COMPUPDATE PRESET;
 ```
 If you are using 4 dc2.large clusters nodes, the estimated time to load the data is as follows, note you can check timing information on actions in the performance and query tabs on the redshift console:
 * REGION (5 rows) - 20s
 * NATION (25 rows) - 20s
 *	CUSTOMER (15M rows) – 3m
 * ORDERS - (76M rows) - 1m
-* PART - (20M rows) - 4m
-*	SUPPLIER - (1M rows) - 1m
-* LINEITEM - (600M rows) - 13m
-*	PARTSUPPLIER - (80M rows) 3m
 
 Note: A few key takeaways from the above COPY statements.
 1. COMPUPDATE PRESET ON will assign compression using the Amazon Redshift best practices related to the data type of the column but without analyzing the data in the table. 
