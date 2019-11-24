@@ -3,8 +3,6 @@ In this lab you will launch a new Redshift Cluster, setup connectivity and confi
 
 ## Contents
 * [Before You Begin](#before-you-begin)
-* [Prerequisites](#prerequisites)
-* [Cloud Formation](#cloud-formation)
 * [Configure Security](#configure-security)
 * [Launch Redshift Cluster ](#launch-redshift-cluster)
 * [Configure Client Tool](#configure-client-tool)
@@ -18,44 +16,17 @@ In this lab you will launch a new Redshift Cluster, setup connectivity and confi
   * [Your_AWS_Password]
 * Determine the [AWS Region Name] and [AWS Region Id] which is closest to you and switch your console to that [Region](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html).  
 
-## Prerequisites
-* While Amazon Redshift does provide a web-based [Query editor](https://console.aws.amazon.com/redshift/home?#query:) for executing simple queries which complete in under 3 minutes, for these labs, it is recommended you install a third-party tool.  We will use [SQL Workbench/J](http://www.sql-workbench.net).
-* Once you have installed your third-party tool, you will need either a JDBC or ODBC driver.  Amazon Redshift offers JDBC and ODBC drivers for download. See [Connecting to an Amazon Redshift Cluster Using SQL Client Tools](https://docs.aws.amazon.com/redshift/latest/mgmt/connecting-to-cluster.html) from the Amazon Redshift Documentation website.
-
-## Cloud Formation
-To launch this cluster and configure security automatically using cloud formation, use the following link and skip ahead to [Configure Client Tool](#configure-client-tool).  
-[![Launch](../images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?#/stacks/new?stackName=ImmersionLab1&templateURL=https://s3-us-west-2.amazonaws.com/redshift-immersionday-labs/lab1.yaml)
 
 ## Configure Security
 ### VPC
-Create or identify a VPC where you will launch your Redshift cluster.  For our purposes we will create a **VPC** to isolate the traffic.
-```
-https://console.aws.amazon.com/vpc/home?#CreateVpc:
-```
-![](../images/VPC.png)
-### InternetGateway
-Create or identify an Internet Gateway.  For our purposes we will create an **Internet Gateway**. Once created, select the Internet Gateway and attach it to the VPC created earlier.  
-```
-https://console.aws.amazon.com/vpc/home?#Create%20Internet%20Gateway:
-```
-![](../images/InternetGateway.png)
-![](../images/InternetGatewayAttach1.png)
-![](../images/InternetGatewayAttach2.png)
+Identify a VPC where you will launch your Redshift cluster.  For our purposes we will reuse the **VPC** created on the Networking lab.
+
 ### Subnets
-Create or identify a subnet with a default route to an Internet Gateway.  For our purposes we will create a **Subnet** attached to the previously created VPC in two different Availability Zones to improve fault tolerance.
-```
-https://console.aws.amazon.com/vpc/home?#CreateSubnet:
-```
+Identify a subnet with a default route to an Internet Gateway.
+
 ![](../images/Subnet1.png)
 ![](../images/Subnet2.png)
-### Route Table
-If you have created new subnets, you must create a **Route Table** with the default route pointed to the internet gateway and with the new subnets added.
-```
-https://console.aws.amazon.com/vpc/home?#CreateRouteTable:
-```
-![](../images/Route.png)
-![](../images/EditRoute.png)
-![](../images/EditSubnet.png)
+
 ### Subnet Group
 Create a Redshift **Cluster Subnet Group** containing the two subnets you created earlier.
 ```
@@ -88,22 +59,6 @@ https://console.aws.amazon.com/redshift/home#cluster-list:
 ![](../images/AdditionalConfiguration.png)  
 ![](../images/AssignRole.png)
 
-## Configure Client Tool
-* See [Prerequisites](#prerequisites) for more details on downloading and installing [SQL Workbench/J](http://www.sql-workbench.net) and the [Redshift JDBC Driver](https://docs.aws.amazon.com/redshift/latest/mgmt/connecting-to-cluster.html). 
-* Launch SQL Workbench/J and navigate to [File | Manage Drivers].
-* Select "Amazon Redshift" and set the driver Library location to where you downloaded the Redshift JDBC Driver. Click Ok.
-![](../images/Library.png)
-* Navigate to [File | Connect Window] to create a new connection profile and modify the following settings and once complete click on the "Test Connection" button.
-  * Name - "LabConnection"
-  * Driver - Amazon Redshift (com.amazon.redshift.jdbc.Driver)
-  * URL - Find this by navigating to the [Cluster List](https://console.aws.amazon.com/redshift/home?cluster-details:#cluster-list:), selecting your cluster, and copying the JDBC URL.  
-  ![](../images/JDBCUrl.png)
-  * Username - [Master user name]
-  * Password - [Master user password]
-  * Autocommit - Enabled
-  
-![](../images/Connection.png)
-
 ## Run Sample Query
 * Run the following query to list the users within the redshift cluster.  
 ```
@@ -111,6 +66,3 @@ select * from pg_user
 ```
 * If you receive the following results, you have established connectivity and this lab is complete.  
 ![](../images/Users.png)
-
-## Before You Leave
-If you are done using your cluster, please think about decommissioning it to avoid having to pay for unused resources.
